@@ -16,6 +16,7 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
+#include "asio/associated_cancellation_slot.hpp"
 #include "asio/awaitable.hpp"
 #include "asio/dispatch.hpp"
 #include "asio/execution/outstanding_work.hpp"
@@ -180,9 +181,12 @@ public:
   {
     typedef typename result_of<F()>::type awaitable_type;
 
+    cancellation_state cs(
+        asio::get_associated_cancellation_slot(handler));
+
     auto a = (co_spawn_entry_point)(static_cast<awaitable_type*>(nullptr),
         ex_, std::forward<F>(f), std::forward<Handler>(handler));
-    awaitable_handler<executor_type, void>(std::move(a), ex_).launch();
+    awaitable_handler<executor_type, void>(std::move(a), ex_, cs).launch();
   }
 
 private:
